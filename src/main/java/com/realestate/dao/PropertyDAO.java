@@ -309,6 +309,8 @@ public class PropertyDAO {
      */
     public List<Property> getPropertiesByUser(int userId) {
         List<Property> properties = new ArrayList<>();
+        
+        // SỬA: Chỉ SELECT từ bảng properties, không join với users
         String sql = "SELECT * FROM properties WHERE user_id = ? ORDER BY created_at DESC";
         
         try (Connection conn = DBConnection.getConnection();
@@ -322,6 +324,9 @@ public class PropertyDAO {
                 property.setImages(getPropertyImages(property.getPropertyId()));
                 properties.add(property);
             }
+            
+            // Debug: in ra số lượng property
+            System.out.println("DEBUG: Found " + properties.size() + " properties for user " + userId);
             
         } catch (SQLException e) {
             e.printStackTrace();

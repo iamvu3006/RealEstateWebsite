@@ -19,7 +19,7 @@ public class AuthFilter implements Filter {
         
         // Các trang public không cần đăng nhập
         String[] publicPaths = {"/login", "/register", "/", "/properties", "/property-detail", 
-                                "/assets/", "/css/", "/js/", "/images/"};
+                                "/assets/", "/css/", "/js/", "/images/", "/uploads/"};
         
         boolean isPublic = false;
         for (String publicPath : publicPaths) {

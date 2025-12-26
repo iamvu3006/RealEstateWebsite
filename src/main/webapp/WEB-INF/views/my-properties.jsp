@@ -1,6 +1,23 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%-- Debug --%>
+<%
+    System.out.println("DEBUG: In my-properties.jsp");
+    Object userId = session.getAttribute("userId");
+    System.out.println("DEBUG: User ID in session: " + userId);
+    
+    java.util.List<com.realestate.model.Property> props = 
+        (java.util.List<com.realestate.model.Property>) request.getAttribute("properties");
+    System.out.println("DEBUG: Properties list size: " + (props != null ? props.size() : "null"));
+    if (props != null) {
+        for (com.realestate.model.Property p : props) {
+            System.out.println("  - ID: " + p.getPropertyId() + 
+                             ", Title: " + p.getTitle() + 
+                             ", Status: " + p.getStatus());
+        }
+    }
+%>
 <!DOCTYPE html>
 <html>
 <head>

@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collection;
 
 @WebServlet("/edit-property")
 @MultipartConfig(
@@ -157,48 +158,93 @@ public class EditPropertyServlet extends HttpServlet {
         }
     }
     
+ // Cập nhật method uploadImages() trong CreatePropertyServlet.java và EditPropertyServlet.java
+
+ // Thay thế phương thức uploadImages trong CreatePropertyServlet và EditPropertyServlet
+
     private List<String> uploadImages(HttpServletRequest request) throws IOException, ServletException {
         List<String> imagePaths = new ArrayList<>();
         
+        // Lấy đường dẫn thực tế của thư mục uploads
         String applicationPath = request.getServletContext().getRealPath("");
         String uploadPath = applicationPath + File.separator + UPLOAD_DIR;
         
+        // Tạo thư mục nếu chưa có
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
+            boolean created = uploadDir.mkdirs();
+            System.out.println("Upload directory created: " + created + " at " + uploadPath);
         }
         
-        for (Part part : request.getParts()) {
+        System.out.println("Upload path: " + uploadPath); // Debug log
+        
+        // Lấy tất cả các file được upload
+        Collection<Part> parts = request.getParts();
+        System.out.println("Total parts: " + parts.size()); // Debug log
+        
+        for (Part part : parts) {
             String fileName = getFileName(part);
             
+            // Debug log
+            System.out.println("Processing part: " + part.getName() + ", filename: " + fileName);
+            
+            // Chỉ xử lý các part là file ảnh và có tên file
             if (fileName != null && !fileName.isEmpty() && isImageFile(fileName)) {
-                String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
-                String filePath = uploadPath + File.separator + uniqueFileName;
-                
-                part.write(filePath);
-                imagePaths.add("/" + UPLOAD_DIR + "/" + uniqueFileName);
+                // Kiểm tra kích thước file
+                if (part.getSize() > 0) {
+                    // Tạo tên file unique để tránh trùng
+                    String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+                    String filePath = uploadPath + File.separator + uniqueFileName;
+                    
+                    // Lưu file
+                    part.write(filePath);
+                    
+                    // Verify file đã được lưu
+                    File savedFile = new File(filePath);
+                    if (savedFile.exists()) {
+                        System.out.println("File saved successfully: " + filePath);
+                        // Lưu đường dẫn relative
+                        imagePaths.add(request.getContextPath() + "/" + UPLOAD_DIR + "/" + uniqueFileName);
+                    } else {
+                        System.err.println("File not saved: " + filePath);
+                    }
+                } else {
+                    System.out.println("Part has no content: " + fileName);
+                }
             }
         }
         
+        System.out.println("Total images uploaded: " + imagePaths.size());
         return imagePaths;
     }
-    
+
     private String getFileName(Part part) {
         String contentDisposition = part.getHeader("content-disposition");
         if (contentDisposition != null) {
             for (String content : contentDisposition.split(";")) {
                 if (content.trim().startsWith("filename")) {
-                    return content.substring(content.indexOf('=') + 1).trim()
+                    String filename = content.substring(content.indexOf('=') + 1).trim()
                                   .replace("\"", "");
+                    // Xử lý trường hợp filename có đường dẫn (IE)
+                    if (filename.contains("\\")) {
+                        filename = filename.substring(filename.lastIndexOf("\\") + 1);
+                    }
+                    return filename;
                 }
             }
         }
         return null;
     }
-    
+
     private boolean isImageFile(String fileName) {
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        return extension.equals("jpg") || extension.equals("jpeg") || 
-               extension.equals("png") || extension.equals("gif");
+        if (fileName == null || fileName.isEmpty()) {
+            return false;
+        }
+        String lowerFileName = fileName.toLowerCase();
+        return lowerFileName.endsWith(".jpg") || 
+               lowerFileName.endsWith(".jpeg") || 
+               lowerFileName.endsWith(".png") || 
+               lowerFileName.endsWith(".gif") ||
+               lowerFileName.endsWith(".webp");
     }
 }

@@ -200,71 +200,81 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function previewImages(event) {
-            const files = event.target.files;
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
+    function previewImages(event) {
+        const files = event.target.files;
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        if (files.length > 10) {
+            alert('Chỉ được chọn tối đa 10 ảnh!');
+            event.target.value = '';
+            return;
+        }
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             
-            if (files.length > 10) {
-                alert('Chỉ được chọn tối đa 10 ảnh!');
-                event.target.value = '';
-                return;
+            if (!file.type.startsWith('image/')) {
+                continue;
             }
             
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'image-preview-item';
                 
-                if (!file.type.startsWith('image/')) {
-                    continue;
+                // FIX: Dùng JavaScript thuần
+                let html = '<img src="' + e.target.result + '" alt="Preview">';
+                html += '<button type="button" class="remove-btn" onclick="removeImage(this, ' + i + ')">×</button>';
+                
+                if (i === 0) {
+                    html += '<span class="badge bg-primary position-absolute" style="bottom:5px;left:5px">Ảnh chính</span>';
                 }
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'image-preview-item';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview">
-                        <button type="button" class="remove-btn" onclick="removeImage(this, ${i})">×</button>
-                        ${i === 0 ? '<span class="badge bg-primary position-absolute" style="bottom:5px;left:5px">Ảnh chính</span>' : ''}
-                    `;
-                    preview.appendChild(div);
-                };
-                reader.readAsDataURL(file);
+                div.innerHTML = html;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function removeImage(btn, index) {
+        const input = document.getElementById('images');
+        const dt = new DataTransfer();
+        const files = input.files;
+        
+        for (let i = 0; i < files.length; i++) {
+            if (i !== index) {
+                dt.items.add(files[i]);
             }
         }
         
-        function removeImage(btn, index) {
-            const input = document.getElementById('images');
-            const dt = new DataTransfer();
-            const files = input.files;
-            
-            for (let i = 0; i < files.length; i++) {
-                if (i !== index) {
-                    dt.items.add(files[i]);
-                }
-            }
-            
-            input.files = dt.files;
-            previewImages({ target: input });
+        input.files = dt.files;
+        
+        // Tạo event object để gọi lại previewImages
+        const event = {
+            target: input
+        };
+        previewImages(event);
+    }
+    
+    // Validation form
+    document.getElementById('propertyForm').addEventListener('submit', function(e) {
+        const price = document.getElementById('price').value;
+        const area = document.getElementById('area').value;
+        
+        if (price <= 0) {
+            e.preventDefault();
+            alert('Giá phải lớn hơn 0!');
+            return false;
         }
         
-        // Validation form
-        document.getElementById('propertyForm').addEventListener('submit', function(e) {
-            const price = document.getElementById('price').value;
-            const area = document.getElementById('area').value;
-            
-            if (price <= 0) {
-                e.preventDefault();
-                alert('Giá phải lớn hơn 0!');
-                return false;
-            }
-            
-            if (area <= 0) {
-                e.preventDefault();
-                alert('Diện tích phải lớn hơn 0!');
-                return false;
-            }
-        });
-    </script>
+        if (area <= 0) {
+            e.preventDefault();
+            alert('Diện tích phải lớn hơn 0!');
+            return false;
+        }
+    });
+	</script>
 </body>
 </html>
